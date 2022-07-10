@@ -23,7 +23,6 @@ export default function Slider({ data, title }) {
   // set current index on slider change
   const onViewableItemsChanged = useRef(({ viewableItems }) => {
     currentSlideIndex = viewableItems[0]?.index || 0;
-    console.log("current slide index is -> ", currentSlideIndex);
     setVisibleSlideIndex(currentSlideIndex);
   });
 
@@ -31,35 +30,16 @@ export default function Slider({ data, title }) {
     flatList.current.scrollToIndex({ animated: false, index });
   };
 
-  const startSlider = () => {
-    if (currentSlideIndex <= dataToRender.length - 2) {
-      intervalId = setInterval(() => {
-        flatList.current.scrollToIndex({
-          animated: true,
-          index: currentSlideIndex + 1,
-        });
-      }, 2000);
-    } else {
-      console.log("pause");
-      pauseSlider();
-    }
-  };
-
-  const pauseSlider = () => {
-    clearInterval(intervalId);
-    console.log("pause << clear");
-  };
+  useEffect(() => {
+    const newData = [[...data].pop(), ...data, [...data].shift()];
+    setDataToRender([...newData]);
+  }, [data.length]);
 
   useEffect(() => {
     if (dataToRender.length && flatList.current) {
       startSlider();
     }
   }, [dataToRender.length]);
-
-  useEffect(() => {
-    const newData = [[...data].pop(), ...data, [...data].shift()];
-    setDataToRender([...newData]);
-  }, [data.length]);
 
   useEffect(() => {
     const length = dataToRender.length; // 6 featured posts including 2 clone posts
@@ -83,17 +63,36 @@ export default function Slider({ data, title }) {
   const renderItems = ({ item }) => {
     return (
       <View>
-        <Image source={{ uri: item.thumbnail }} style={styles.image} />
+        <Image source={{ uri: item?.thumbnail }} style={styles.image} />
         <View style={{ width }}>
           <Text
             numberOfLines={2}
             style={[styles.postTitle, { fontWeight: "700", color: "#383838" }]}
           >
-            {item.title}
+            {item?.title}
           </Text>
         </View>
       </View>
     );
+  };
+
+  const startSlider = () => {
+    if (currentSlideIndex <= dataToRender.length - 2) {
+      intervalId = setInterval(() => {
+        flatList.current.scrollToIndex({
+          animated: true,
+          index: currentSlideIndex + 1,
+        });
+      }, 2000);
+    } else {
+      console.log("pause");
+      pauseSlider();
+    }
+  };
+
+  const pauseSlider = () => {
+    clearInterval(intervalId);
+    console.log("pause << clear");
   };
 
   return (
@@ -117,7 +116,7 @@ export default function Slider({ data, title }) {
           index,
         })}
         onViewableItemsChanged={onViewableItemsChanged.current}
-        keyExtractor={(item, index) => item.id + index}
+        keyExtractor={(item, index) => item?.id + index}
         onScrollBeginDrag={pauseSlider}
         onScrollEndDrag={startSlider}
         renderItem={renderItems}
