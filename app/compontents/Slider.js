@@ -1,5 +1,5 @@
 import react, { useState, useEffect, useRef } from "react";
-// import { StatusBar } from "expo-status-bar";
+
 import {
   StyleSheet,
   Text,
@@ -37,9 +37,10 @@ export default function Slider({ data, title }) {
 
   useEffect(() => {
     if (dataToRender.length && flatList.current) {
+      console.log("start slider");
       startSlider();
     }
-  }, [dataToRender.length]);
+  }, []);
 
   useEffect(() => {
     const length = dataToRender.length; // 6 featured posts including 2 clone posts
@@ -83,9 +84,8 @@ export default function Slider({ data, title }) {
           animated: true,
           index: currentSlideIndex + 1,
         });
-      }, 2000);
+      }, 3000);
     } else {
-      console.log("pause");
       pauseSlider();
     }
   };
@@ -145,7 +145,6 @@ const styles = StyleSheet.create({
   container: {
     alignSelf: "center",
     width,
-    paddingTop: 50,
   },
   sliderHead: {
     flexDirection: "row",

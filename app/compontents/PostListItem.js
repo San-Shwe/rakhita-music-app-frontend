@@ -3,7 +3,7 @@ import React from "react";
 import dateFormat from "dateformat";
 
 const IMAGE_WIDTH = 100;
-const PostListItem = ({ post }) => {
+const PostListItem = ({ post, navigateTo }) => {
   const { thumbnail, title, createdAt, author } = post;
 
   const getThumbanil = (uri) => {
@@ -13,14 +13,26 @@ const PostListItem = ({ post }) => {
 
   return (
     <TouchableOpacity
+      onPress={navigateTo}
       style={{ flexDirection: "row", justifyContent: "space-between" }}
     >
       <Image
         source={getThumbanil(thumbnail)}
-        style={{ width: IMAGE_WIDTH, height: IMAGE_WIDTH / 1.7 }}
+        style={{
+          width: IMAGE_WIDTH,
+          height: IMAGE_WIDTH / 1.7,
+          borderRadius: 7,
+        }}
       />
-      <View style={{ flex: 1, marginLeft: 5 }}>
-        <Text style={{ fontSize: 15, fontWeight: "700", color: "#383838" }}>
+      <View
+        style={{
+          flex: 1,
+          marginLeft: 5,
+          flexDirection: "column",
+          justifyContent: "space-between",
+        }}
+      >
+        <Text style={{ fontSize: 15, fontWeight: "500", color: "#383838" }}>
           {title}
         </Text>
         <Text style={{ fontSize: 14, color: "#d3d3d3" }}>
