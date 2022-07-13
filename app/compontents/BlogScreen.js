@@ -1,11 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Text, FlatList, View } from "react-native";
 import { Divider } from "react-native-paper";
 import Slider from "./Slider";
 import PostListItem from "./PostListItem";
 import { getFeaturedPosts, getLatestPosts, getSinglePost } from "../api/post";
+import { useNetInfo } from "@react-native-community/netinfo";
 
 import Constants from "expo-constants"; // to get system information
+import NoInternet from "./NoInternet";
 
 let pageNo = 0;
 const limit = 5;
@@ -15,6 +17,8 @@ export default function BlogScreen({ navigation }) {
   const [latestPosts, setLatestPosts] = useState([]);
   const [reachToEnd, setReachToEnd] = useState(false);
   const [busy, setBusy] = useState(false);
+  const netInfo = useNetInfo();
+  const [noInternet, setNoInternet] = useState(false);
 
   const fetchFeaturedPosts = async () => {
     const { error, post } = await getFeaturedPosts();
@@ -32,7 +36,7 @@ export default function BlogScreen({ navigation }) {
   };
 
   const fetchMorePosts = async () => {
-    console.log("running");
+    console.log("fetch more");
     if (reachToEnd || busy) return;
     pageNo += 1;
     setBusy(true);
@@ -50,16 +54,38 @@ export default function BlogScreen({ navigation }) {
     navigation.navigate("PostDetails", { post });
   };
 
+  const fetchNetInfo = () => {
+    const { isConnected, isInternetReachable } = netInfo;
+    if (isConnected === false && isInternetReachable === false) {
+      setNoInternet(true);
+    } else {
+      setNoInternet(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNetInfo();
+  }, [netInfo]);
+
   useEffect(() => {
     fetchFeaturedPosts();
     fetchLatestPosts();
+
+    return () => {
+      pageNo = 0;
+      setReachToEnd(false);
+    };
   }, []);
 
-  const ListHeaderComponent = () => {
+  const ListHeaderComponent = useCallback(() => {
     return (
       <View style={{ paddingTop: Constants.statusBarHeight }}>
         {featuredPosts.length ? (
-          <Slider data={featuredPosts} title="Featured Posts" />
+          <Slider
+            data={featuredPosts}
+            onSliderPress={fetchSinglePost}
+            title="Featured Posts"
+          />
         ) : null}
         <Divider />
         <View style={{ marginTop: 15, marginBottom: 3 }}>
@@ -69,7 +95,7 @@ export default function BlogScreen({ navigation }) {
         </View>
       </View>
     );
-  };
+  }, [featuredPosts]); // this list header component will only run when featuredpost is change | we need to run this component just once
 
   const renderItem = ({ item }) => {
     return (
@@ -89,6 +115,8 @@ export default function BlogScreen({ navigation }) {
       <Divider />
     </View>
   );
+
+  if (noInternet) return <NoInternet onRefreshPress={fetchNetInfo} />;
 
   return (
     <View>

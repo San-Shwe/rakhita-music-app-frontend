@@ -13,6 +13,8 @@ import dateFormat from "dateformat";
 import Markdown from "react-native-markdown-display";
 import * as Linking from "expo-linking";
 import { getSinglePost } from "../api/post";
+import RelatedPosts from "./RelatedPosts";
+import { Divider } from "react-native-paper";
 
 const { width } = Dimensions.get("window");
 
@@ -52,6 +54,14 @@ const PostDetails = ({ route, navigation }) => {
     } else {
       Alert.alert("Invalid URL", "cannot open broken link");
     }
+  };
+
+  const fetchSinglePost = async (slug) => {
+    console.log("SULG IS ", slug);
+    const { error, post } = await getSinglePost(slug);
+    if (error) return console.log(error);
+
+    navigation.push("PostDetails", { post });
   };
 
   return (
@@ -109,6 +119,22 @@ const PostDetails = ({ route, navigation }) => {
         >
           {content}
         </Markdown>
+      </View>
+      <View style={{ marginTop: 15, marginBottom: 3, paddingHorizontal: 10 }}>
+        <Text
+          style={{
+            color: "#383838",
+            fontSize: 20,
+            fontWeight: "700",
+            marginBottom: 10,
+          }}
+        >
+          Related Post
+        </Text>
+        <Divider />
+        <View>
+          <RelatedPosts onPostPress={fetchSinglePost} postId={post.id} />
+        </View>
       </View>
     </ScrollView>
   );

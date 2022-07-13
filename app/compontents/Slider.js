@@ -1,11 +1,11 @@
 import react, { useState, useEffect, useRef } from "react";
-
 import {
   StyleSheet,
   Text,
   View,
   FlatList,
   Dimensions,
+  TouchableWithoutFeedback,
   Image,
 } from "react-native";
 
@@ -13,7 +13,7 @@ const width = Dimensions.get("window").width - 20;
 let intervalId;
 let currentSlideIndex = 0;
 
-export default function Slider({ data, title }) {
+export default function Slider({ data, title, onSliderPress }) {
   const [dataToRender, setDataToRender] = useState([]);
   const [visibleSlideIndex, setVisibleSlideIndex] = useState(0);
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
@@ -26,6 +26,11 @@ export default function Slider({ data, title }) {
     setVisibleSlideIndex(currentSlideIndex);
   });
 
+  // set current index on slider change | for the infinite loop slider
+  const viewabilityConfig = useRef({
+    viewAreaCoveragePercentThreshold: 50,
+  });
+
   const handleScrollTo = (index) => {
     flatList.current.scrollToIndex({ animated: false, index });
   };
@@ -33,6 +38,10 @@ export default function Slider({ data, title }) {
   useEffect(() => {
     const newData = [[...data].pop(), ...data, [...data].shift()];
     setDataToRender([...newData]);
+
+    return () => {
+      pauseSlider();
+    };
   }, [data.length]);
 
   useEffect(() => {
@@ -40,7 +49,7 @@ export default function Slider({ data, title }) {
       console.log("start slider");
       startSlider();
     }
-  }, []);
+  }, [dataToRender]);
 
   useEffect(() => {
     const length = dataToRender.length; // 6 featured posts including 2 clone posts
@@ -63,17 +72,22 @@ export default function Slider({ data, title }) {
 
   const renderItems = ({ item }) => {
     return (
-      <View>
-        <Image source={{ uri: item?.thumbnail }} style={styles.image} />
-        <View style={{ width }}>
-          <Text
-            numberOfLines={2}
-            style={[styles.postTitle, { fontWeight: "700", color: "#383838" }]}
-          >
-            {item?.title}
-          </Text>
+      <TouchableWithoutFeedback onPress={() => onSliderPress(item.slug)}>
+        <View>
+          <Image source={{ uri: item?.thumbnail }} style={styles.image} />
+          <View style={{ width }}>
+            <Text
+              numberOfLines={2}
+              style={[
+                styles.postTitle,
+                { fontWeight: "700", color: "#383838" },
+              ]}
+            >
+              {item?.title}
+            </Text>
+          </View>
         </View>
-      </View>
+      </TouchableWithoutFeedback>
     );
   };
 
@@ -87,12 +101,12 @@ export default function Slider({ data, title }) {
       }, 3000);
     } else {
       pauseSlider();
+      console.log("pause from start slider");
     }
   };
 
   const pauseSlider = () => {
     clearInterval(intervalId);
-    console.log("pause << clear");
   };
 
   return (
@@ -116,6 +130,7 @@ export default function Slider({ data, title }) {
           index,
         })}
         onViewableItemsChanged={onViewableItemsChanged.current}
+        viewabilityConfig={viewabilityConfig.current}
         keyExtractor={(item, index) => item?.id + index}
         onScrollBeginDrag={pauseSlider}
         onScrollEndDrag={startSlider}
